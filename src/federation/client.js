@@ -1,6 +1,8 @@
 'use strict';
+const fetch = require('node-fetch');
 
 function internalHeaders() {
+  if (!process.env.INTERNAL_API_KEY) throw new Error('INTERNAL_API_KEY env var is not set.');
   return {
     'X-Internal-Key': process.env.INTERNAL_API_KEY,
     'Content-Type': 'application/json',
@@ -8,6 +10,7 @@ function internalHeaders() {
 }
 
 function base() {
+  if (!process.env.FEDERATION_INTERNAL_URL) throw new Error('FEDERATION_INTERNAL_URL env var is not set.');
   return process.env.FEDERATION_INTERNAL_URL;
 }
 

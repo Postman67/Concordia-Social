@@ -68,11 +68,14 @@ CREATE TABLE friendships (
   created_at    TIMESTAMPTZ DEFAULT NOW(),
   updated_at    TIMESTAMPTZ DEFAULT NOW(),
   CONSTRAINT chk_no_self_friend CHECK (requester_id <> addressee_id),
-  CONSTRAINT uq_friendship_pair UNIQUE (requester_id, addressee_id),
-  CONSTRAINT uq_canonical_pair  UNIQUE (
-    LEAST(requester_id::text, addressee_id::text),
-    GREATEST(requester_id::text, addressee_id::text)
-  )
+  CONSTRAINT uq_friendship_pair UNIQUE (requester_id, addressee_id)
+);
+
+-- Prevent (A→B) and (B→A) coexisting. UNIQUE constraints can't use expressions
+-- inline, so this is a separate unique index.
+CREATE UNIQUE INDEX uq_canonical_pair ON friendships (
+  LEAST(requester_id::text, addressee_id::text),
+  GREATEST(requester_id::text, addressee_id::text)
 );
 
 CREATE INDEX idx_friendships_addressee ON friendships (addressee_id, status);

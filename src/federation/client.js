@@ -10,8 +10,11 @@ function internalHeaders() {
 }
 
 function base() {
-  if (!process.env.FEDERATION_INTERNAL_URL) throw new Error('FEDERATION_INTERNAL_URL env var is not set.');
-  return process.env.FEDERATION_INTERNAL_URL;
+  const url = process.env.FEDERATION_INTERNAL_URL;
+  if (!url) throw new Error('FEDERATION_INTERNAL_URL env var is not set.');
+  // Ensure the URL has a scheme — Railway private network URLs often omit it.
+  if (!/^https?:\/\//i.test(url)) return `http://${url}`;
+  return url;
 }
 
 /**

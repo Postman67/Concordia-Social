@@ -9,7 +9,9 @@ function setupSocket(io) {
     if (!token) return next(new Error('Authentication required.'));
     try {
       const payload = jwt.verify(token, process.env.JWT_SECRET);
-      socket.user = { id: payload.id };
+      const userId = payload.id ?? payload.sub ?? payload.userId ?? payload.user_id;
+      if (!userId) return next(new Error('Invalid token structure.'));
+      socket.user = { id: userId };
       next();
     } catch {
       next(new Error('Invalid or expired token.'));

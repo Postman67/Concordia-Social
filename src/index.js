@@ -6,6 +6,7 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 
+const migrate = require('./db/migrate');
 const { setupSocket } = require('./socket/index');
 const usersRouter = require('./routes/users');
 const friendsRouter = require('./routes/friends');
@@ -33,6 +34,14 @@ app.use('/api/messages', messagesRouter(io));
 setupSocket(io);
 
 const PORT = process.env.PORT || 3001;
-httpServer.listen(PORT, () => {
-  console.log(`Concordia-Social running on port ${PORT}`);
-});
+
+migrate()
+  .then(() => {
+    httpServer.listen(PORT, () => {
+      console.log(`Concordia-Social running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('Database migration failed:', err.message);
+    process.exit(1);
+  });

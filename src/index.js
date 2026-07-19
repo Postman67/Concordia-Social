@@ -15,11 +15,23 @@ const messagesRouter = require('./routes/messages');
 
 const app = express();
 const httpServer = createServer(app);
+
+// CORS: comma-separated allowlist via CORS_ORIGINS. Unset = permissive with a
+// loud warning (dev convenience only — set it in production).
+const corsOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+const corsOrigin = corsOrigins.length > 0 ? corsOrigins : '*';
+if (corsOrigins.length === 0) {
+  console.warn('[cors] CORS_ORIGINS not set — allowing all origins. Set it in production.');
+}
+
 const io = new Server(httpServer, {
-  cors: { origin: '*', methods: ['GET', 'POST'] },
+  cors: { origin: corsOrigin, methods: ['GET', 'POST'] },
 });
 
-app.use(cors());
+app.use(cors({ origin: corsOrigin }));
 app.use(express.json());
 
 app.get('/health', (_req, res) =>

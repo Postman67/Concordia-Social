@@ -1,17 +1,17 @@
 'use strict';
-const jwt = require('jsonwebtoken');
 const db = require('../db');
+const { verifySocialToken } = require('../federation/verify');
 
 function setupSocket(io) {
-  // Verify the Federation JWT on every socket connection
-  io.use((socket, next) => {
+  // Verify the Federation identity token on every socket connection.
+  // Verified locally against the Federation JWKS — no shared secret.
+  io.use(async (socket, next) => {
     const token = socket.handshake.auth?.token;
     if (!token) return next(new Error('Authentication required.'));
     try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET);
-      const userId = payload.id ?? payload.sub ?? payload.userId ?? payload.user_id;
-      if (!userId) return next(new Error('Invalid token structure.'));
-      socket.user = { id: userId };
+      const payload = await verifySocialToken(token);
+      if (!payload.sub) return next(new Error('Invalid token structure.'));
+      socket.user = { id: payload.sub };
       next();
     } catch {
       next(new Error('Invalid or expired token.'));
